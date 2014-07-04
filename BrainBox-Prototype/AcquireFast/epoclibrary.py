@@ -324,41 +324,6 @@ def main():
             print data
             print "data0"
             print data[0]
-##            print "data1:"
-##            print data[1]
-##            print "data2:"
-##            print data[2]
-##            print "data3:"
-##            print data[3]
-##            print "data4:"
-##            print data[4]
-##            print "data5:"
-##            print data[5]
-##            print "data6:"
-##            print data[6]
-##            print "data7"
-##            print data[7]
-##            print "data8:"
-##            print data[8]
-##            print "data9:"
-##            print data[9]
-##            print "data101:"
-##            print data[10]
-##            print "data11:"
-##            print data[11]
-##            print "data12:"
-##            print data[12]
-##            print "data13:"
-##            print data[13]
-##            print "data14:"
-##            print data[14]
-##            print "data15:"
-##            print data[15]
-##            print "data16:"
-##            print data[16]
-##            print "data17:"
-##            print data[17]
-##            print "_-_-_-_-__----------------------------------"
         except EPOCTurnedOffError, ete:
             print ete
         except KeyboardInterrupt, ki:
