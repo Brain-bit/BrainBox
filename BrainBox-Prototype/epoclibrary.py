@@ -253,7 +253,7 @@ class EPOC(object):
                                         self.output_queue, False])
         self.decryption.daemon = True
         self.decryption.start()
-    @profile
+
     def get_sample(self):
         """Returns an array of EEG samples."""
         raw_data = self._cipher.decrypt(self.endpoint.read(32))
