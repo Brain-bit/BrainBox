@@ -3,6 +3,8 @@ from Crypto.Cipher import AES
 import usb.core
 import usb.util
 import utils
+import numpy as np
+import getlevel
 
 class EPOCError(Exception):
     """Base class for exceptions in this module."""
@@ -253,26 +255,62 @@ class EPOC(object):
                                         self.output_queue, False])
         self.decryption.daemon = True
         self.decryption.start()
-    @profile
-    def get_sample(self):
-        """Returns an array of EEG samples."""
-        raw_data = self._cipher.decrypt(self.endpoint.read(32))
-        # Parse counter
-        ctr = ord(raw_data[0])
-        # Update gyro's if requested
-        if ctr < 128:
-            self.counter = ctr
-            # Contact qualities
-            if self.cq_order[ctr]:
-                self.quality[self.cq_order[ctr]] = utils.get_level(raw_data, self.bit_indexes["QU"]) / 540.0
-            # Finally EEG data
-            return [0.51 * utils.get_level(raw_data, self.bit_indexes[n]) for n in self.channel_mask]
+
+
+
+    def acquire_data_fast(self, duration, stop_callback=None, stop_callback_param=None):
+        """A more optimized method to acquire data from the EPOC headset without calling get_sample()."""
+            
+        bit_indexes = [self.bit_indexes[n] for n in self.channel_mask]
+        # Packet idx to keep track of losses
+        idx = []
+        total_samples = duration * self.sampling_rate
+
+        # Pre-allocated array
+        _buffer = np.ndarray((total_samples, len(self.channel_mask)), dtype=np.float64)
+
+        # Acquire in one read, this should be more robust against drops
+        raw_data = self._cipher.decrypt(self.endpoint.read(32 * (total_samples + duration + 1), timeout=(duration+1)*1000))
+
+        if stop_callback and stop_callback_param:
+            stop_callback(stop_callback_param)
+
+        # Split data back into 32-byte chunks, skipping 1st packet
+        split_data = [raw_data[i:i + 32] for i in range(32, len(raw_data), 32)]
+
+        # Loop ctr
+        c = 0
+        for block in split_data:
+            if c == total_samples:
+                break
+            # Parse counter
+            ctr = ord(block[0])
+            # Skip battery
+            if ctr < 128:
+                idx.append(ctr)
+                _buffer[c] = [0.51 * getlevel.get_level(block, bi) for bi in bit_indexes]
+                c += 1
+                # Update qualities as well
+                if self.cq_order[ctr] is not None:
+                    self.quality[self.cq_order[ctr]] = utils.get_level(block, self.bit_indexes["QU"]) / 540.0
+            else:
+                # Parse battery level
+                self.battery = self.battery_levels[ctr]
+
+        return idx, _buffer
+
+    def get_quality(self, electrode):
+        "Return contact quality for the specified electrode."""
+        return self.quality.get(electrode, None)
+
+    def disconnect(self):
+        """Release the claimed interface."""
+        if self.method == "libusb":
+            for interf in self.device.get_active_configuration():
+                usb.util.release_interface(
+                    self.device, interf.bInterfaceNumber)
         else:
-            # Set a synthetic counter for this special packet: 128
-            self.counter = 128
-            # Parse battery level
-            self.battery = self.battery_levels[ctr]
-            return []
+            self.endpoint.close()
 
 
 def main():
@@ -281,22 +319,46 @@ def main():
 
     while 1:
         try:
-            data = e.get_sample()
-            # data is [] for each battery packet, e.g. ctr > 127
-            if data:
-                # Clear screen
-                print("\x1b[2J\x1b[H")
-                header = "Emotiv Data Packet [%3d/128] [Loss: N/A] [Battery: %2d(%%)]" % (
-                    e.counter, e.battery)
-                print "%s\n%s" % (header, '-'*len(header))
-
-                print "%10s: %5d" % ("Gyro(x)", e.gyroX)
-                print "%10s: %5d" % ("Gyro(y)", e.gyroY)
-
-                for i,channel in enumerate(e.channel_mask):
-                    print "%10s: %.2f %20s: %.2f" % (channel, data[i], "Quality", e.quality[channel])
-
-
+            idx, data = e.acquire_data_fast(1)
+            print "data:"
+            print data
+            print "data0"
+            print data[0]
+##            print "data1:"
+##            print data[1]
+##            print "data2:"
+##            print data[2]
+##            print "data3:"
+##            print data[3]
+##            print "data4:"
+##            print data[4]
+##            print "data5:"
+##            print data[5]
+##            print "data6:"
+##            print data[6]
+##            print "data7"
+##            print data[7]
+##            print "data8:"
+##            print data[8]
+##            print "data9:"
+##            print data[9]
+##            print "data101:"
+##            print data[10]
+##            print "data11:"
+##            print data[11]
+##            print "data12:"
+##            print data[12]
+##            print "data13:"
+##            print data[13]
+##            print "data14:"
+##            print data[14]
+##            print "data15:"
+##            print data[15]
+##            print "data16:"
+##            print data[16]
+##            print "data17:"
+##            print data[17]
+##            print "_-_-_-_-__----------------------------------"
         except EPOCTurnedOffError, ete:
             print ete
         except KeyboardInterrupt, ki:

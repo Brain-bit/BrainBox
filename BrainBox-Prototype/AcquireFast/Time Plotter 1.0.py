@@ -1,8 +1,30 @@
+# Uncomment the next two lines if you want to save the animation
+#import matplotlib
+#matplotlib.use("Agg")
+
+import numpy
+import math
+from matplotlib.pylab import *
+from mpl_toolkits.axes_grid1 import host_subplot
+import matplotlib.animation as animation
+
+
+"""\
+This module provides the EPOC class for accessing Emotiv EPOC
+EEG headsets.
+"""
+
 import os
+
 from Crypto.Cipher import AES
+
 import usb.core
 import usb.util
+
+import numpy as np
+
 import utils
+
 
 class EPOCError(Exception):
     """Base class for exceptions in this module."""
@@ -253,30 +275,128 @@ class EPOC(object):
                                         self.output_queue, False])
         self.decryption.daemon = True
         self.decryption.start()
-    @profile
+
+    def __get_sample_dummy(self):
+        """Read random dummy samples."""
+        raw_data = self.endpoint.read(32)
+        return [utils.get_level(raw_data, self.bit_indexes[n]) for n in self.channel_mask]
+
     def get_sample(self):
         """Returns an array of EEG samples."""
-        raw_data = self._cipher.decrypt(self.endpoint.read(32))
-        # Parse counter
-        ctr = ord(raw_data[0])
-        # Update gyro's if requested
-        if ctr < 128:
-            self.counter = ctr
-            # Contact qualities
-            if self.cq_order[ctr]:
-                self.quality[self.cq_order[ctr]] = utils.get_level(raw_data, self.bit_indexes["QU"]) / 540.0
-            # Finally EEG data
-            return [0.51 * utils.get_level(raw_data, self.bit_indexes[n]) for n in self.channel_mask]
+        try:
+            raw_data = self._cipher.decrypt(self.endpoint.read(32))
+            # Parse counter
+            ctr = ord(raw_data[0])
+            # Update gyro's if requested
+            if self.enable_gyro:
+                self.gyroX = ((ord(raw_data[29]) << 4) | (ord(raw_data[31]) >> 4))
+                self.gyroY = ((ord(raw_data[30]) << 4) | (ord(raw_data[31]) & 0x0F))
+            if ctr < 128:
+                self.counter = ctr
+                # Contact qualities
+                if self.cq_order[ctr]:
+                    self.quality[self.cq_order[ctr]] = utils.get_level(raw_data, self.bit_indexes["QU"]) / 540.0
+                # Finally EEG data
+                return [0.51 * utils.get_level(raw_data, self.bit_indexes[n]) for n in self.channel_mask]
+            else:
+                # Set a synthetic counter for this special packet: 128
+                self.counter = 128
+                # Parse battery level
+                self.battery = self.battery_levels[ctr]
+                return []
+        except usb.USBError as usb_exception:
+            if usb_exception.errno == 110:
+                self.headset_on = False
+                raise EPOCTurnedOffError(
+                        "Make sure that headset is turned on")
+            else:
+                raise EPOCUSBError("USB I/O error with errno = %d" %
+                        usb_exception.errno)
+
+    def acquire_data(self, duration):
+        """Acquire data from the EPOC headset."""
+
+        total_samples = duration * self.sampling_rate
+        _buffer = np.ndarray((total_samples, len(self.channel_mask) + 1),
+                dtype=np.uint16)
+        ctr = 0
+        while ctr < total_samples:
+            # Fetch new data
+            data = self.get_sample()
+            if data:
+                # Prepend sequence numbers
+                _buffer[ctr] = np.insert(np.array(data), 0, self.counter)
+                ctr += 1
+
+        return _buffer
+
+    def acquire_data_fast(self, duration, stop_callback=None, stop_callback_param=None):
+        """A more optimized method to acquire data from the EPOC headset without calling get_sample()."""
+
+        def get_level(raw_data, bits):
+            """Returns signal level from raw_data frame."""
+            level = 0
+            for i in range(13, -1, -1):
+                level <<= 1
+                b, o = (bits[i] / 8) + 1, bits[i] % 8
+                level |= (ord(raw_data[b]) >> o) & 1
+            # Return level in uV (microVolts)
+            return level
+
+        bit_indexes = [self.bit_indexes[n] for n in self.channel_mask]
+        # Packet idx to keep track of losses
+        idx = []
+        total_samples = duration * self.sampling_rate
+
+        # Pre-allocated array
+        _buffer = np.ndarray((total_samples, len(self.channel_mask)), dtype=np.float64)
+
+        # Acquire in one read, this should be more robust against drops
+        raw_data = self._cipher.decrypt(self.endpoint.read(32 * (total_samples + duration + 1), timeout=(duration+1)*1000))
+
+        if stop_callback and stop_callback_param:
+            stop_callback(stop_callback_param)
+
+        # Split data back into 32-byte chunks, skipping 1st packet
+        split_data = [raw_data[i:i + 32] for i in range(32, len(raw_data), 32)]
+
+        # Loop ctr
+        c = 0
+        for block in split_data:
+            if c == total_samples:
+                break
+            # Parse counter
+            ctr = ord(block[0])
+            # Skip battery
+            if ctr < 128:
+                idx.append(ctr)
+                _buffer[c] = [0.51 * get_level(block, bi) for bi in bit_indexes]
+                c += 1
+                # Update qualities as well
+                if self.cq_order[ctr] is not None:
+                    self.quality[self.cq_order[ctr]] = utils.get_level(block, self.bit_indexes["QU"]) / 540.0
+            else:
+                # Parse battery level
+                self.battery = self.battery_levels[ctr]
+
+        return idx, _buffer
+
+    def get_quality(self, electrode):
+        "Return contact quality for the specified electrode."""
+        return self.quality.get(electrode, None)
+
+    def disconnect(self):
+        """Release the claimed interface."""
+        if self.method == "libusb":
+            for interf in self.device.get_active_configuration():
+                usb.util.release_interface(
+                    self.device, interf.bInterfaceNumber)
         else:
-            # Set a synthetic counter for this special packet: 128
-            self.counter = 128
-            # Parse battery level
-            self.battery = self.battery_levels[ctr]
-            return []
+            self.endpoint.close()
 
-
+"""
 def main():
-    """Test function for EPOC class."""
+
     e = EPOC()
 
     while 1:
@@ -295,14 +415,186 @@ def main():
 
                 for i,channel in enumerate(e.channel_mask):
                     print "%10s: %.2f %20s: %.2f" % (channel, data[i], "Quality", e.quality[channel])
-
-
         except EPOCTurnedOffError, ete:
             print ete
         except KeyboardInterrupt, ki:
             e.disconnect()
             return 0
 
-if __name__ == "__main__":
-    import sys
-    sys.exit(main())
+"""
+# Sent for figure
+font = {'size'   : 9}
+matplotlib.rc('font', **font)
+
+# Setup figure and subplots
+f0 = figure(num = 0, figsize = (20, 8))#, dpi = 100)
+f0.suptitle("EEG Datum", fontsize=12)
+ax01 = subplot2grid((1, 1), (0, 0))
+
+#tight_layout()
+
+# Set titles of subplots
+ax01.set_title('Applitude vs Time')
+
+# set y-limits
+ax01.set_ylim(0,3000)
+
+
+# sex x-limits
+ax01.set_xlim(0,5.0)
+
+
+# Turn on grids
+ax01.grid(True)
+
+
+# set label names
+ax01.set_xlabel("x")
+ax01.set_ylabel("py")
+
+
+# Data Placeholders
+f3=zeros(0)
+fc5=zeros(0)
+af3=zeros(0)
+f7=zeros(0)
+t7=zeros(0)
+p7=zeros(0)
+s01=zeros(0)
+s02=zeros(0)
+p8=zeros(0)
+t8=zeros(0)
+f8=zeros(0)
+af4=zeros(0)
+fc6=zeros(0)
+f4=zeros(0)
+qu=zeros(0)
+t=zeros(0)
+
+# set plots
+
+pf3, = ax01.plot(t,f3,'b-', label="P7")
+pfc5, = ax01.plot(t,fc5,'g-', label="P8")
+paf3, = ax01.plot(t,af3,'r-', label="AF3")
+pf7, = ax01.plot(t,f7,'y-', label="F7")
+pt7, = ax01.plot(t,f3,'c-', label="T7")
+pp7, = ax01.plot(t,f3,'c-', label="P7")
+ps01, = ax01.plot(t,fc5,'k-', label="01")
+ps02, = ax01.plot(t,af3,'b-', label="02")
+pp8, = ax01.plot(t,f7,color = '#FF69B4', label="P8")
+pt8, = ax01.plot(t,f3,color = '#FF8C00', label="T8")
+pf8, = ax01.plot(t,f8,'m-', label="F8")
+paf4, = ax01.plot(t,af4,color = '#7FFF00', label="AF4")
+pfc6, = ax01.plot(t,fc6,color = '#8B4513', label="FC6")
+pf4, = ax01.plot(t,f4,color = '#DDA0DD', label="F4")
+pqu, = ax01.plot(t,f7,color = '#A9A9A9', label="QU")
+
+
+
+# set legends
+#ax01.legend([p011,p012], [p011.get_label(),p012.get_label()])
+#ax01.legend([pf3, pfc5, paf3, pf7, pf8, paf4, pfc6, pf4], ["F3", "FC5", "AF3", "F7", "F8", "AF4", "FC6", "F4"])
+ax01.legend([pf3, pfc5, paf3, pf7,pt7,pp7,ps01,ps02,pp8,pt8,pf8,paf4,pfc6,pf4,pqu], ["F3", "FC5", "AF3", "F7", "T7","P7", "01","02","P8","T8","F8","AF4","FC6","F4","QU"])
+#ax01.legend([pf8, paf4, pfc6, pf4], ["F8", "AF4", "FC6", "F4"])
+
+# Data Update every x (helps move the window right)
+xmin = 0.0
+xmax = 5.0
+x = 0.0
+
+e = EPOC()
+
+def updateData(self):
+	global x
+
+	global f3 #left frontal nodes
+	global fc5
+	global af3
+	global f7
+	global t7
+	global p7
+	global s01
+	global s02
+	global p8
+	global t8
+	global f8 #right frontal nodes
+	global af4
+	global fc6
+	global f4
+	global qu
+	global t
+	global e
+	
+	data = e.get_sample()
+	if data:
+		#print data[1]*(math.exp(1.5))-11800
+
+		f3=append(f3,data[0]+400)
+		#fc5=append(fc5,data[1]*(math.exp(1.5))-6000)
+		fc5=append(fc5,data[1]+200)
+		af3=append(af3,data[2])
+		f7=append(f7,data[3]-200)
+		t7=append(t7,data[4]-400)
+		p7=append(p7,data[5]-400) #
+		s01=append(s01,data[6]-600)
+		s02=append(s02,data[7]-800)
+		p8=append(p8,data[8]-1000) #
+		t8=append(t8,data[9]-1000)
+		f8=append(f8,data[10]-1200)
+		af4=append(af4,data[11]-1400)
+		fc6=append(fc6,data[12]-1600)
+		f4=append(f4,data[13]-1800)
+		#v qu=append(qu,data[14]-2000)
+
+
+		t=append(t,x)
+
+		x += 0.05
+
+		pf3.set_data(t,f3)
+		pfc5.set_data(t,fc5)
+		paf3.set_data(t,af3)
+		pf7.set_data(t,f7)
+		pt7.set_data(t,t7)
+		pp7.set_data(t,p7)
+		ps01.set_data(t,s01)
+		ps02.set_data(t,s02)
+		pp8.set_data(t,p8)
+		pt8.set_data(t,t8)
+		pf8.set_data(t,f8)
+		paf4.set_data(t,af4)
+		pfc6.set_data(t,fc6)
+		pf4.set_data(t,f4)
+		#pqu.set_data(t,qu)
+
+
+		if x >= xmax-1.00:
+			pf3.axes.set_xlim(x-xmax+1.0,x+1.0)
+			pfc5.axes.set_xlim(x-xmax+1.0,x+1.0)
+			paf3.axes.set_xlim(x-xmax+1.0,x+1.0)
+			pf7.axes.set_xlim(x-xmax+1.0,x+1.0)
+			pt7.axes.set_xlim(x-xmax+1.0,x+1.0)
+			pp7.axes.set_xlim(x-xmax+1.0,x+1.0)
+			ps01.axes.set_xlim(x-xmax+1.0,x+1.0)
+			ps02.axes.set_xlim(x-xmax+1.0,x+1.0)
+			pp8.axes.set_xlim(x-xmax+1.0,x+1.0)
+			pt8.axes.set_xlim(x-xmax+1.0,x+1.0)
+			pf8.axes.set_xlim(x-xmax+1.0,x+1.0)
+			paf4.axes.set_xlim(x-xmax+1.0,x+1.0)
+			pfc6.axes.set_xlim(x-xmax+1.0,x+1.0)
+			pf4.axes.set_xlim(x-xmax+1.0,x+1.0)
+			#pqu.axes.set_xlim(x-xmax+1.0,x+1.0)
+
+		return pf3,pfc5,paf3,pf7,pt7,pp7,ps01,ps02,pp8,pt8,pf8,paf4,pfc6,pf4
+	else:
+		return 0,0,0,0,0,0,0,0,0,0,0,0,0
+
+		# interval: draw new frame every 'interval' ms
+		# frames: number of frames to draw
+simulation = animation.FuncAnimation(f0,updateData, blit=False, frames=2000, interval=20, repeat=True)
+
+		# Uncomment the next line if you want to save the animation
+		#simulation.save(filename='sim.mp4',fps=30,dpi=300)
+
+plt.show()
+
