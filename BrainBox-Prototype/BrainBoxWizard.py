@@ -1,91 +1,126 @@
-from PyQt4 import QtGui, QtCore
-import os
-def createIntroPage():
-    page = QtGui.QWizardPage()
-    page.setTitle("Introduction")
+import ttk
+import Tkinter
 
-    label = QtGui.QLabel("Welcome to the BrainBox Wizard. Please follow the wizard in order to register your device and callibrate the BCI headset with your appplications. Please connect the headset into the USB port.")    
-    label.setWordWrap(True)
-    brainboximg= QtGui.QLabel()
-    brainboximg.setPixmap(QtGui.QPixmap("brainboxwiz.png"))
-    brainboximg.show() 
-    layout = QtGui.QGridLayout()
-    layout.addWidget(label,0,0)
-    layout.addWidget(brainboximg,0,1)
-    page.setLayout(layout)
+class Wizard(object, ttk.Notebook):
+    def __init__(self, master=None, **kw):
+        npages = kw.pop('npages', 3)
+        kw['style'] = 'Wizard.TNotebook'
+        ttk.Style(master).layout('Wizard.TNotebook.Tab', '')
+        ttk.Notebook.__init__(self, master, **kw)
 
-    return page
+        self._children = {}
 
+        for page in range(npages):
+            self.add_empty_page()
 
-def createRegistrationPage():
-    page = QtGui.QWizardPage()
-    page.setTitle("Registration")
-    page.setSubTitle("Please fill both fields.")
-    #f = open('userdata','rw+')
+        self.current = 0
+        self._wizard_buttons()
+
+    def _wizard_buttons(self):
+        """Place wizard buttons in the pages."""
+        for indx, child in self._children.iteritems():
+            btnframe = ttk.Frame(child)
+            btnframe.pack(side='bottom', fill='x', padx=6, pady=12)
+
+            nextbtn = ttk.Button(btnframe, text="Next", command=self.next_page)
+            nextbtn.pack(side='right', anchor='e', padx=6)
+            if indx != 0:
+                prevbtn = ttk.Button(btnframe, text="Previous",
+                    command=self.prev_page)
+                prevbtn.pack(side='right', anchor='e', padx=6)
+
+                if indx == len(self._children) - 1:
+                    nextbtn.configure(text="Finish", command=self.close)
+
+    def next_page(self):
+        self.current += 1
+
+    def prev_page(self):
+        self.current -= 1
+
+    def close(self):
+        self.master.destroy()
+
+    def add_empty_page(self):
+        child = ttk.Frame(self)
+        self._children[len(self._children)] = child
+        self.add(child)
+
+    def add_page_body(self, body):
+        body.pack(side='top', fill='both', padx=6, pady=12)
+        
+    def firstpage(self, body):
+        body.pack(side='top', fill='both', padx=6, pady=12)
+        img =Tkinter.PhotoImage(file="bbimtrans.gif")
+        bImg = Tkinter.Label(body, image=img)
+        bImg.img = img
+        bImg.pack(pady=20)
+        desc=ttk.Label(body, text='Welcome to the BrainBox Wizard. Please follow the wizard in order to register\nyour device and callibrate the BCI headset with your appplications.\nPlease connect the headset into the USB port.').pack(pady = 20)
+
+    def secondpage(self, body):
+        desc=ttk.Label(body, text='Please fill in the registration form below to set up your account with the\nBrainPrint service, and to setup BrainBox.\nPlease make sure you have a proper Internet Connection!').pack(pady = 20)
+        seperator = ttk.Frame(height=2)
+        seperator.pack()
+        body.pack(side='top', fill='both', padx=6, pady=12)
+        name=ttk.Label(body, text='Name').pack(pady=0)
+        nameentry= ttk.Entry(body)
+        nameentry.pack()
+        email=ttk.Label(body, text='Email').pack(pady=10)
+        emailentry= ttk.Entry(body)
+        emailentry.pack()
+        loation=ttk.Label(body, text='Location').pack(pady=10)
+        locationentry= ttk.Entry(body)
+        locationentry.pack()
+        user=ttk.Label(body, text='User').pack(pady=5)
+        userentry= ttk.Entry(body)
+        userentry.pack()
+        password=ttk.Label(body, text='Password').pack(pady=10)
+        passentry= ttk.Entry(body)
+        passentry.pack()
+        device=ttk.Label(body, text='Device').pack(pady=10)
+        deviceentry= ttk.Entry(body)
+        deviceentry.pack()
+        
+    def thirdpage(self, body):
+        body.pack(side='top', fill='both', padx=6, pady=12)
+        img =Tkinter.PhotoImage(file="brainboxwizcor.gif")
+        bImg = Tkinter.Label(body, image=img)
+        bImg.img = img
+        bImg.pack(pady=20)
+        desc=ttk.Label(body, text='Your are now registered, you may know begin\nusing BrainBox! Have a nice day!').pack(pady = 20)
+
+    def page_container(self, page_num):
+        if page_num in self._children:
+            return self._children[page_num]
+        else:
+            raise KeyError("Invalid page: %s" % page_num)
+
+    def _get_current(self):
+        return self._current
    
-    nameLabel = QtGui.QLabel("Name:")
-    nameLineEdit = QtGui.QLineEdit()
-    
-    emailLabel = QtGui.QLabel("Email address:")
-    emailLineEdit = QtGui.QLineEdit()
+    def _set_current(self, curr):
+        if curr not in self._children:
+            raise KeyError("Invalid page: %s" % curr)
 
-    userLabel = QtGui.QLabel("Username:")
-    userLineEdit = QtGui.QLineEdit()
-    
-    passLabel = QtGui.QLabel("Password:")
-    passLineEdit = QtGui.QLineEdit()
+        self._current = curr
+        self.select(self._children[self._current])
 
-    deviceidLabel = QtGui.QLabel("Device ID:")
-    deviceidLineEdit = QtGui.QLineEdit()
-    
-    
-    layout = QtGui.QGridLayout()
-    layout.addWidget(nameLabel, 0, 0)
-    layout.addWidget(nameLineEdit, 0, 1)
-    layout.addWidget(emailLabel, 1, 0)
-    layout.addWidget(emailLineEdit, 1, 1)
-    layout.addWidget(userLabel, 2, 0)
-    layout.addWidget(userLineEdit, 2, 1)
-    layout.addWidget(passLabel, 3, 0)
-    layout.addWidget(passLineEdit, 3, 1)
-    layout.addWidget(deviceidLabel, 4, 0)
-    layout.addWidget(deviceidLineEdit, 4, 1)
-    page.setLayout(layout)
-
-    return page
+    current = property(_get_current, _set_current)
 
 
-def createConclusionPage():
-    page = QtGui.QWizardPage()
-    page.setTitle("Conclusion")
-    
-    label = QtGui.QLabel("You are now successfully registered. Have a nice day!")
-    label.setWordWrap(True)
+def demo():
+    root = Tkinter.Tk()
+    wizard = Wizard(npages=3)
+    wizard.master.minsize(400, 350)
+    page0 = ttk.Label(wizard.page_container(0))
+    page1 = ttk.Label(wizard.page_container(1))
+    page2 = ttk.Label(wizard.page_container(2))
+    wizard.firstpage(page0)
+    wizard.secondpage(page1)
+    wizard.thirdpage(page2)
+    wizard.pack(fill='both', expand=True)
+    root.mainloop()
 
-    layout = QtGui.QVBoxLayout()
-    layout.addWidget(label)
-    page.setLayout(layout)
+if __name__ == "__main__":
+    demo()
 
-    return page
-
-def writetouser(fieldin):
-    print fieldin
-##    f = open('USERDATA','a')
-##    f.write(fieldin)
-##    f.close()
-    
-if __name__ == '__main__':
-
-    import sys
-
-    app = QtGui.QApplication(sys.argv)
-
-    wizard = QtGui.QWizard()
-    wizard.addPage(createIntroPage())
-    wizard.addPage(createRegistrationPage())
-    wizard.addPage(createConclusionPage())
-
-    wizard.setWindowTitle("BrainBox Wizard")
-    wizard.show()
-
-    sys.exit(wizard.exec_())
