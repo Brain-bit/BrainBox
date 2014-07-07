@@ -108,6 +108,20 @@ class Wizard(object, ttk.Notebook):
         bImg.pack(pady=20)
         desc=ttk.Label(body, text='Your are now registered, you may know begin\nusing BrainBox! Have a nice day!').pack(pady = 20)
 
+    def signin(self, body):
+        body.pack(side='top', fill='both', padx=6, pady=12)
+        img =Tkinter.PhotoImage(file="braincloud2.gif")
+        bImg = Tkinter.Label(body, image=img)
+        bImg.img = img
+        bImg.pack(pady=20)
+        desc=ttk.Label(body, text='Sign in using your login credentials to load your BrainCloud').pack(pady = 20)
+        user=ttk.Label(body, text='User').pack(pady=5)
+        userentry= ttk.Entry(body)
+        userentry.pack()
+        password=ttk.Label(body, text='Password').pack(pady=10)
+        passentry= ttk.Entry(body)
+        passentry.pack()
+
     def page_container(self, page_num):
         if page_num in self._children:
             return self._children[page_num]
@@ -130,14 +144,19 @@ class Wizard(object, ttk.Notebook):
 def demo():
     variables = 0
     root = Tkinter.Tk()
-    wizard = Wizard(npages=3)
+    wizard = Wizard(npages=4)
     wizard.master.minsize(400, 350)
     page0 = ttk.Label(wizard.page_container(0))
     page1 = ttk.Label(wizard.page_container(1))
     page2 = ttk.Label(wizard.page_container(2))
+    page3 = ttk.Label(wizard.page_container(3))
+
+
     wizard.firstpage(page0)
     wizard.secondpage(page1)
     wizard.thirdpage(page2)
+    wizard.signin(page3)
+
     wizard.pack(fill='both', expand=True)
     root.mainloop()
 
