@@ -20,28 +20,54 @@ class Wizard(object, ttk.Notebook):
     def _wizard_buttons(self):
 #        global variables
         """Place wizard buttons in the pages."""
+        #print self._children.iteritems()
         for indx, child in self._children.iteritems():
             btnframe = ttk.Frame(child)
             btnframe.pack(side='bottom', fill='x', padx=6, pady=12)
 #            nextbtn = ttk.Button(btnframe, text="Next", command=self.next_page(self))            
-            nextbtn = ttk.Button(btnframe, text="Next", command=self.next_page)
-            nextbtn.pack(side='right', anchor='e', padx=6)
-            if indx != 0:
-                prevbtn = ttk.Button(btnframe, text="Previous",
-                    command=self.prev_page)
+            
+            if indx == 0:
+                nextbtn = ttk.Button(btnframe, text="Sign up", command=self.next_page)
+                nextbtn.pack(side='right', anchor='e', padx=6)
+                prevbtn = ttk.Button(btnframe, text="Sign in",command=self.sign_up)
                 prevbtn.pack(side='right', anchor='e', padx=6)
 
-                if indx == len(self._children) - 1:
+            elif indx == 2:
+                nextbtn = ttk.Button(btnframe, text="Finish", command=self.close)
+                nextbtn.pack(side='right', anchor='e', padx=6)
+                prevbtn = ttk.Button(btnframe, text="Previous",command=self.prev_page)
+                prevbtn.pack(side='right', anchor='e', padx=6)
+
+            elif indx == 3:
+                nextbtn = ttk.Button(btnframe, text="Finish", command=self.close)
+                nextbtn.pack(side='right', anchor='e', padx=6)
+                prevbtn = ttk.Button(btnframe, text="Previous",command=self.sign_upprev)
+                prevbtn.pack(side='right', anchor='e', padx=6)
+                
+            elif indx != 0:
+                nextbtn = ttk.Button(btnframe, text="Next", command=self.next_page)
+                nextbtn.pack(side='right', anchor='e', padx=6)
+                
+                prevbtn = ttk.Button(btnframe, text="Previous",command=self.prev_page)
+                prevbtn.pack(side='right', anchor='e', padx=6)
+
+                if indx == len(self._children) - 2:
                     nextbtn.configure(text="Finish", command=self.close)
 
     def next_page(self):#,variable):
-        print self.current 
-        if self.current == 1:
-            print "Page 1" , self.variables
+        #print self.current 
+        #if self.current == 1:
+            #print "Page 1" , self.variables
         self.current += 1
 
     def prev_page(self):
         self.current -= 1
+
+    def sign_up(self):
+        self.current = 3
+
+    def sign_upprev(self):
+        self.current = 0
 
     def close(self):
         self.master.destroy()
@@ -162,4 +188,3 @@ def demo():
 
 if __name__ == "__main__":
     demo()
-
