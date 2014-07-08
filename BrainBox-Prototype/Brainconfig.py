@@ -10,9 +10,29 @@ globalslidersend.init()
 note = Notebook(root,  padding="3 3 12 12")
 note.grid(column=0, row=0, sticky=(N, W, E, S))
 
+def fieldandlabel(tab,ltext,val,col1,row1,col2,row2,setter):
+	label=ttk.Label(tab, text=ltext).grid(column=col1, row=row1, sticky=W)
+        field = ttk.Entry(tab, width=7,textvariable=val)
+	field.grid(column=col2,row=row2, sticky=(W, E))
+
+def overview(tab):
+	startserver=ttk.Button(tab, text='Start Serfer ya toto', command=root.destroy)
+	startserver.grid(column=1, row=10, sticky=W)
+	startserver=ttk.Button(tab, text='Stop Server', command=root.destroy)
+	startserver.grid(column=2, row=10, sticky=W)
+
+	userlabel=ttk.Label(tab, text="Username: ").grid(column=1, row=1, sticky=W)
+	username=ttk.Label(tab, text="USERNAME FROM DATA FILE").grid(column=2, row=1, sticky=W)
+	username=ttk.Label(tab, text="STATUS").grid(column=1, row=2, sticky=W)
+
+def settings(tab):
+	fieldandlabel(tab,"Server Port: ", "1101", 1, 2, 2, 2,"port")
+	fieldandlabel(tab,"Bluetooth Port: ", "1101", 1, 4, 2, 4,"port")
+	fieldandlabel(tab,"Address ", "127.0.0.1", 1, 6, 2, 6,"127.0.0.1")
+	
 def expression(setter,name,col,row,col1,row1,col2,row2):
         exp1 = StringVar()
-        exp2 = StringVar()
+        exp2 = StringVar()	
         rgettt= DoubleVar()
         ttk.Label(tab2, text=name).grid(column=col, row=row, sticky=W)
         exp_slide = ttk.Scale(tab2, orient=HORIZONTAL, length=200, from_=-50, to=50,variable=rgettt)
@@ -49,13 +69,17 @@ tab1 = Frame(note)
 tab2 = Frame(note)
 tab3 = Frame(note)
 tab4 = Frame(note)
+tab5 = Frame(note)
 
 note.add(tab1, text = "Overview")
 note.add(tab2, text = "Expressive")
 note.add(tab3, text = "Cognitive")
 note.add(tab4, text = "Applications")
+note.add(tab5, text = "Settings")
 
-Button(tab1, text='Exit', command=root.destroy).pack(padx=100, pady=100)
+#Overview
+overview(tab1)
+settings(tab5)
 #Expressive
 raise_slide = expression(0,"Raise Eyebrows:",1,3,2,3,3,3)
 lb_slide = expression(0,"Left Brow:",1,4,2,4,3,4)
