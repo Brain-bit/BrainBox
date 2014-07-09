@@ -11,19 +11,19 @@ note = Notebook(root,  padding="3 3 12 12")
 note.grid(column=0, row=0, sticky=(N, W, E, S))
 
 def fieldandlabel(tab,ltext,val,col1,row1,col2,row2,setter):
-	label=ttk.Label(tab, text=ltext).grid(column=col1, row=row1, sticky=W)
+	label=ttk.Label(tab, text=ltext).grid(column=col1, row=row1, sticky=W,padx=5,pady=5)
         field = ttk.Entry(tab, width=7,textvariable=val)
-	field.grid(column=col2,row=row2, sticky=(W, E))
+	field.grid(column=col2,row=row2, sticky=(W, E),padx=5,pady=5)
 
 def overview(tab):
 	startserver=ttk.Button(tab, text='Start Serfer ya toto', command=root.destroy)
-	startserver.grid(column=1, row=10, sticky=W)
+	startserver.grid(column=1, row=10, sticky=W,padx=5,pady=5)
 	startserver=ttk.Button(tab, text='Stop Server', command=root.destroy)
-	startserver.grid(column=2, row=10, sticky=W)
+	startserver.grid(column=2, row=10, sticky=W,padx=5,pady=5)
 
-	userlabel=ttk.Label(tab, text="Username: ").grid(column=1, row=1, sticky=W)
-	username=ttk.Label(tab, text="USERNAME FROM DATA FILE").grid(column=2, row=1, sticky=W)
-	username=ttk.Label(tab, text="STATUS").grid(column=1, row=2, sticky=W)
+	userlabel=ttk.Label(tab, text="Username: ").grid(column=1, row=1, sticky=W,padx=5,pady=5)
+	username=ttk.Label(tab, text="USERNAME FROM DATA FILE").grid(column=2, row=1, sticky=W,padx=5,pady=5)
+	username=ttk.Label(tab, text="STATUS").grid(column=1, row=2, sticky=W,padx=5,pady=5)
 
 def settings(tab):
 	fieldandlabel(tab,"Server Port: ", "1101", 1, 2, 2, 2,"port")
