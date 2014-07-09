@@ -24,10 +24,7 @@ class Wizard(object, ttk.Notebook):
 
         self.current = 0
         self._wizard_buttons()
-        
-    def openother(self):
-        os.system("python Brainconfig.py 1")  
-        
+
     def _wizard_buttons(self):
 #        global variables
         """Place wizard buttons in the pages."""
@@ -53,13 +50,8 @@ class Wizard(object, ttk.Notebook):
                 if indx ==1 :#registeriation page
                     nextbtn = ttk.Button(btnframe, text="Next", command=self.next_page)
                     nextbtn.pack(side='right', anchor='e', padx=6)
-<<<<<<< HEAD
                 elif indx == 2:#Finish registeriation page
                     nextbtn = ttk.Button(btnframe, text="Finish", command=self.close)
-=======
-                elif indx == 2:
-                    nextbtn = ttk.Button(btnframe, text="Finish", command=self.openother)
->>>>>>> origin/master
                     nextbtn.pack(side='right', anchor='e', padx=6)
             
                 prevbtn = ttk.Button(btnframe, text="Previous",command=self.prev_page)
