@@ -1,8 +1,15 @@
 import ttk
 import Tkinter
-global variables
+import globalslidersend
+import os
+#import BrainBoxGUI2
+#global variables
+#global slidersend
+
 class Wizard(object, ttk.Notebook):
-    variables = 0
+    NewAccountVariable = 0
+    CurAccountVariable = 0
+    
     def __init__(self, master=None, **kw):
         npages = kw.pop('npages', 3)
         kw['style'] = 'Wizard.TNotebook'
@@ -32,36 +39,44 @@ class Wizard(object, ttk.Notebook):
                 prevbtn = ttk.Button(btnframe, text="Sign in",command=self.sign_up)
                 prevbtn.pack(side='right', anchor='e', padx=6)
 
-            elif indx == 2:
-                nextbtn = ttk.Button(btnframe, text="Finish", command=self.close)
-                nextbtn.pack(side='right', anchor='e', padx=6)
-                prevbtn = ttk.Button(btnframe, text="Previous",command=self.prev_page)
-                prevbtn.pack(side='right', anchor='e', padx=6)
-
             elif indx == 3:
-                nextbtn = ttk.Button(btnframe, text="Finish", command=self.close)
+                nextbtn = ttk.Button(btnframe, text="Sign in", command=self.check_username)
                 nextbtn.pack(side='right', anchor='e', padx=6)
                 prevbtn = ttk.Button(btnframe, text="Previous",command=self.sign_upprev)
                 prevbtn.pack(side='right', anchor='e', padx=6)
                 
-            elif indx != 0:
-                nextbtn = ttk.Button(btnframe, text="Next", command=self.next_page)
-                nextbtn.pack(side='right', anchor='e', padx=6)
-                
+            else:
+                if indx ==1 :
+                    nextbtn = ttk.Button(btnframe, text="Next", command=self.next_page)
+                    nextbtn.pack(side='right', anchor='e', padx=6)
+                elif indx == 2:
+                    nextbtn = ttk.Button(btnframe, text="Finish", command=self.close)
+                    nextbtn.pack(side='right', anchor='e', padx=6)
+            
                 prevbtn = ttk.Button(btnframe, text="Previous",command=self.prev_page)
                 prevbtn.pack(side='right', anchor='e', padx=6)
 
-                if indx == len(self._children) - 2:
-                    nextbtn.configure(text="Finish", command=self.close)
 
     def next_page(self):#,variable):
         #print self.current 
-        #if self.current == 1:
-            #print "Page 1" , self.variables
+##        if self.current == 1:
+##            print "Page 2" , self.variables
+##            for variable in self.variables:
+##                print 'Input => "%s"' % variable.get() 
         self.current += 1
 
     def prev_page(self):
         self.current -= 1
+
+    def check_username(self):
+        print "Page 1" , self.CurAccountVariable
+        inputlist = []
+        for i in self.CurAccountVariable:
+            inputlist.append(i.get())
+        if inputlist[0] in globalslidersend.usernamepassword.keys() and globalslidersend.usernamepassword[inputlist[0]] == inputlist[1]:
+            print 'right user'
+           
+        
 
     def sign_up(self):
         self.current = 3
@@ -71,6 +86,9 @@ class Wizard(object, ttk.Notebook):
 
     def close(self):
         self.master.destroy()
+        #execfile("Brainconfig.py")
+        #os.system('python Brainconfig.py')
+        BrainBoxGUI2.BrainBoxExpressiv()
 
     def add_empty_page(self):
         child = ttk.Frame(self)
@@ -135,6 +153,7 @@ class Wizard(object, ttk.Notebook):
         desc=ttk.Label(body, text='Your are now registered, you may know begin\nusing BrainBox! Have a nice day!').pack(pady = 20)
 
     def signin(self, body):
+        variables = []
         body.pack(side='top', fill='both', padx=6, pady=12)
         img =Tkinter.PhotoImage(file="braincloud2.gif")
         bImg = Tkinter.Label(body, image=img)
@@ -144,9 +163,13 @@ class Wizard(object, ttk.Notebook):
         user=ttk.Label(body, text='User').pack(pady=5)
         userentry= ttk.Entry(body)
         userentry.pack()
+        variables.append(userentry)
+
         password=ttk.Label(body, text='Password').pack(pady=10)
         passentry= ttk.Entry(body)
         passentry.pack()
+        variables.append(passentry)
+        return variables
 
     def page_container(self, page_num):
         if page_num in self._children:
@@ -168,7 +191,9 @@ class Wizard(object, ttk.Notebook):
 
 
 def demo():
-    variables = 0
+    globalslidersend.init()
+    #variables = 0
+    
     root = Tkinter.Tk()
     wizard = Wizard(npages=4)
     wizard.master.minsize(400, 350)
@@ -179,9 +204,9 @@ def demo():
 
 
     wizard.firstpage(page0)
-    wizard.secondpage(page1)
+    wizard.NewAccountVariable = wizard.secondpage(page1)
     wizard.thirdpage(page2)
-    wizard.signin(page3)
+    wizard.CurAccountVariable = wizard.signin(page3)
 
     wizard.pack(fill='both', expand=True)
     root.mainloop()
