@@ -1,70 +1,120 @@
 from Tkinter import *
 from ttk import *
 import ttk
-import globalslidersend 
+#import globalslidersend 
 import threading
-
-root = Tk()
-root.title("BrainBox | Configuration")
-globalslidersend.init()
-note = Notebook(root,  padding="3 3 12 12")
-note.grid(column=0, row=0, sticky=(N, W, E, S))
+import time
+import BrainBoxWizard
 
 def fieldandlabel(tab,ltext,val,col1,row1,col2,row2,setter):
-	label=ttk.Label(tab, text=ltext).grid(column=col1, row=row1, sticky=W,padx=5,pady=5)
-        field = ttk.Entry(tab, width=7,textvariable=val)
-	field.grid(column=col2,row=row2, sticky=(W, E),padx=5,pady=5)
+    label=ttk.Label(tab, text=ltext).grid(column=col1, row=row1, sticky=W,padx=5,pady=5)
+    field = ttk.Entry(tab, width=7,textvariable=val)
+    field.grid(column=col2,row=row2, sticky=(W, E),padx=5,pady=5)
 
-def overview(tab):
-	startserver=ttk.Button(tab, text='Start Serfer ya toto', command=root.destroy)
-	startserver.grid(column=1, row=10, sticky=W,padx=5,pady=5)
-	startserver=ttk.Button(tab, text='Stop Server', command=root.destroy)
-	startserver.grid(column=2, row=10, sticky=W,padx=5,pady=5)
+def overview(tab,brainconfig,N, W, E, S):
+    startserver=ttk.Button(tab, text='Start Serfer ya toto', command=brainconfig.destroy)
+    startserver.grid(column=1, row=10, sticky=W,padx=5,pady=5)
+    startserver=ttk.Button(tab, text='Stop Server', command=brainconfig.destroy)
+    startserver.grid(column=2, row=10, sticky=W,padx=5,pady=5)
 
-	userlabel=ttk.Label(tab, text="Username: ").grid(column=1, row=1, sticky=W,padx=5,pady=5)
-	username=ttk.Label(tab, text="USERNAME FROM DATA FILE").grid(column=2, row=1, sticky=W,padx=5,pady=5)
-	username=ttk.Label(tab, text="STATUS").grid(column=1, row=2, sticky=W,padx=5,pady=5)
+    userlabel=ttk.Label(tab, text="Username: ").grid(column=1, row=1, sticky=W,padx=5,pady=5)
+    username=ttk.Label(tab, text="USERNAME FROM DATA FILE").grid(column=2, row=1, sticky=W,padx=5,pady=5)
+    username=ttk.Label(tab, text="STATUS").grid(column=1, row=2, sticky=W,padx=5,pady=5)
 
-def settings(tab):
-	fieldandlabel(tab,"Server Port: ", "1101", 1, 2, 2, 2,"port")
-	fieldandlabel(tab,"Bluetooth Port: ", "1101", 1, 4, 2, 4,"port")
-	fieldandlabel(tab,"Address ", "127.0.0.1", 1, 6, 2, 6,"127.0.0.1")
-	
-def expression(setter,name,col,row,col1,row1,col2,row2):
-        exp1 = StringVar()
-        exp2 = StringVar()	
-        rgettt= DoubleVar()
-        ttk.Label(tab2, text=name).grid(column=col, row=row, sticky=W)
-        exp_slide = ttk.Scale(tab2, orient=HORIZONTAL, length=200, from_=-50, to=50,variable=rgettt)
+def settings(tab,brainconfig,N, W, E, S):
+    #brainconfig.fieldandlabel(tab,"Server Port: ", "1101", 1, 2, 2, 2,"port")
+    label=ttk.Label(tab, text="Server Port: ").grid(column=1, row=2, sticky=W,padx=5,pady=5)
+    field = ttk.Entry(tab, width=7,textvariable="1101")
+    field.grid(column=2,row=2, sticky=(W, E),padx=5,pady=5)
+
+    #brainconfig.fieldandlabel(tab,"Bluetooth Port: ", "1101", 1, 4, 2, 4,"port")
+    label=ttk.Label(tab, text="Bluetooth Port: ").grid(column=1, row=4, sticky=W,padx=5,pady=5)
+    field = ttk.Entry(tab, width=7,textvariable="1101")
+    field.grid(column=2,row=4, sticky=(W, E),padx=5,pady=5)
+
+    #brainconfig.fieldandlabel(tab,"Address ", "127.0.0.1", 1, 6, 2, 6,"127.0.0.1")
+    label=ttk.Label(tab, text="Address: ").grid(column=1, row=6, sticky=W,padx=5,pady=5)
+    field = ttk.Entry(tab, width=7,textvariable="127.0.0.1")
+    field.grid(column=2,row=6, sticky=(W, E),padx=5,pady=5)
+
+    
+def expression(setter,name,col,row,col1,row1,col2,row2,tab,N, W, E, S):
+        exp1 = Tkinter.StringVar()
+        exp2 = Tkinter.StringVar()  
+        rgettt= Tkinter.DoubleVar()
+        ttk.Label(tab, text=name).grid(column=col, row=row, sticky=W)
+        exp_slide = ttk.Scale(tab, orient=Tkinter.HORIZONTAL, length=200, from_=-50, to=50,variable=rgettt)
         exp_slide.grid(column=col1, row=row1, sticky=(W, E))
 
-        exp_entry = ttk.Entry(tab2, width=7,textvariable=rgettt)
+        exp_entry = ttk.Entry(tab, width=7,textvariable=rgettt)
         exp_entry.grid(column=col2, row=row2, sticky=(W, E))
         exp_slide.set(setter)
         return exp_slide
 
-def slidersender(*args):
-	globalslidersend.slidersend = []
-	globalslidersend.slidersend.append(float(raise_slide.get()))
-	globalslidersend.slidersend.append(float(lb_slide.get()))
-	globalslidersend.slidersend.append(float(rb_slide.get()))
-	globalslidersend.slidersend.append(float(blink_slide.get()))
-	globalslidersend.slidersend.append(float(lrb_slide.get()))
-	globalslidersend.slidersend.append(float(fur_slide.get()))
-	globalslidersend.slidersend.append(float(smile_slide.get()))
-	globalslidersend.slidersend.append(float(clench_slide.get()))
-	globalslidersend.slidersend.append(float(laugh_slide.get()))
-	globalslidersend.slidersend.append(float(rs_slide.get()))
-	globalslidersend.slidersend.append(float(ls_slide.get()))
-	userdatafile = open("UserData.txt",'w')
-	
-	globalslidersend.userdata[globalslidersend.indexuser]  = "%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s"%(globalslidersend.username,float(raise_slide.get()),float(lb_slide.get()),float(rb_slide.get()),float(blink_slide.get()),float(lrb_slide.get()),float(fur_slide.get()),float(smile_slide.get()),float(clench_slide.get()),float(laugh_slide.get()),float(rs_slide.get()),float(ls_slide.get()))
-	
-	userdatafile.writelines(globalslidersend.userdata)
-	userdatafile.close()
-	print globalslidersend.slidersend  #writelines
-	return globalslidersend.slidersend
-    
+
+
+def slidersender():
+    print "Toooo"
+    print globalslidersend.slidersend
+    global username
+    global raise_slide
+    global lb_slide
+    global lrb_slide
+    global rb_slide
+    global blink_slide
+    global fur_slide
+    global smile_slide,clench_slide,laugh_slide,rs_slide,ls_slide
+
+    globalslidersend.slidersend = []
+    globalslidersend.slidersend.append(float(raise_slide.get()))
+    globalslidersend.slidersend.append(float(lb_slide.get()))
+    globalslidersend.slidersend.append(float(rb_slide.get()))
+    globalslidersend.slidersend.append(float(blink_slide.get()))
+    globalslidersend.slidersend.append(float(lrb_slide.get()))
+    globalslidersend.slidersend.append(float(fur_slide.get()))
+    globalslidersend.slidersend.append(float(smile_slide.get()))
+    globalslidersend.slidersend.append(float(clench_slide.get()))
+    globalslidersend.slidersend.append(float(laugh_slide.get()))
+    globalslidersend.slidersend.append(float(rs_slide.get()))
+    globalslidersend.slidersend.append(float(ls_slide.get()))
+    print globalslidersend.slidersend
+    userdatafile = open("UserData.txt",'r')
+    userdata = userdatafile.readlines()
+    userdatafile.close()
+    userdatafile = open("UserData.txt",'w')
+    userlist,userdatalist = [],[]
+    for x in range(len(userdata)):
+        #print userdata[x]
+        if userdata[x] != '\n' or userdata[x] != '':
+                userdatalist.append([])
+                userdalist = userdata[x].strip().split(',')
+                userlist.append(userdalist[0])
+    indexuser = userlist.index(username)
+    userdata[indexuser]  = "%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s"%(username,float(raise_slide.get()),float(lb_slide.get()),float(rb_slide.get()),float(blink_slide.get()),float(lrb_slide.get()),float(fur_slide.get()),float(smile_slide.get()),float(clench_slide.get()),float(laugh_slide.get()),float(rs_slide.get()),float(ls_slide.get()))    
+    print userdata
+    for x in userdata:
+        userdatafile.write(x+'\n')
+    userdatafile.close()
+      #writelines
+    #return globalslidersend.slidersend
+
+
+
+#print "Toooooooooooooooooooo"
+#time.sleep(5)
+#import wizard
+#print wizard.slidersend
+#print globals()
+#print locals()
+
+#pri
+#print globalslidersend.slidersend
+username = globalslidersend.slidersend[-1]
+brainconfig = Tk()
+brainconfig.title("BrainBox | Configuration")
+#globalslidersend.init()
+note = Notebook(brainconfig,  padding="3 3 12 12")
+note.grid(column=0, row=0, sticky=(N, W, E, S))
 tab1 = Frame(note)
 tab2 = Frame(note)
 tab3 = Frame(note)
@@ -78,20 +128,21 @@ note.add(tab4, text = "Applications")
 note.add(tab5, text = "Settings")
 
 #Overview
-overview(tab1)
-settings(tab5)
+overview(tab1,brainconfig,N, W, E, S)
+settings(tab5,brainconfig,N, W, E, S)
 #Expressive
-raise_slide = expression(0,"Raise Eyebrows:",1,3,2,3,3,3)
-lb_slide = expression(0,"Left Brow:",1,4,2,4,3,4)
-rb_slide = expression(0,"Right Brow:",1,5,2,5,3,5)
-blink_slide = expression(0,"Blink:",1,6,2,6,3,6)
-lrb_slide = expression(0,"Smile:",1,7,2,7,3,7)
-fur_slide = expression(0,"Furrowborrow:",1,8,2,8,3,8)
-smile_slide = expression(0,"Smile:",1,9,2,9,3,9)
-clench_slide = expression(0,"Clench:",1,10,2,10,3,10)
-laugh_slide = expression(0,"Laugh:",1,11,2,11,3,11)
-rs_slide = expression(0,"Right Smirk:",1,12,2,12,3,12)
-ls_slide = expression(0,"Left Smirk:",1,13,2,13,3,13)
+raise_slide = expression(0,"Raise Eyebrows:",1,3,2,3,3,3,tab2,N, W, E, S)
+lb_slide = expression(0,"Left Brow:",1,4,2,4,3,4,tab2,N, W, E, S)
+rb_slide = expression(0,"Right Brow:",1,5,2,5,3,5,tab2,N, W, E, S)
+blink_slide = expression(0,"Blink:",1,6,2,6,3,6,tab2,N, W, E, S)
+lrb_slide = expression(0,"Smile:",1,7,2,7,3,7,tab2,N, W, E, S)
+fur_slide = expression(0,"Furrowborrow:",1,8,2,8,3,8,tab2,N, W, E, S)
+smile_slide = expression(0,"Smile:",1,9,2,9,3,9,tab2,N, W, E, S)
+clench_slide = expression(0,"Clench:",1,10,2,10,3,10,tab2,N, W, E, S)
+laugh_slide = expression(0,"Laugh:",1,11,2,11,3,11,tab2,N, W, E, S)
+rs_slide = expression(0,"Right Smirk:",1,12,2,12,3,12,tab2,N, W, E, S)
+ls_slide = expression(0,"Left Smirk:",1,13,2,13,3,13,tab2,N, W, E, S)
+#print globalslidersend.slidersend
 
 raise_slide.set(globalslidersend.slidersend[0])
 lb_slide.set(globalslidersend.slidersend[1])
@@ -107,12 +158,14 @@ ls_slide.set(globalslidersend.slidersend[10])
 
 t = Text(tab2,width=40, height=10)
 t.grid(column=2,row=14, sticky=(W, E))
-
-for child in tab2.winfo_children(): child.grid_configure(padx=5, pady=5)
+#print "fdws"
+for child in tab2.winfo_children():
+    child.grid_configure(padx=5, pady=5)
+#print "Totototototototoottoo"
 ttk.Button(tab2, text="Apply", command=slidersender).grid(column=10, row=12, sticky=W)
-ttk.Button(tab2, text="Update BrainPrint", command=slidersender).grid(column=10, row=11, sticky=W)
-root.bind('<Return>', slidersender)
-
+#ttk.Button(tab2, text="Update BrainPrint", command=slidersender(username,raise_slide,lb_slide,rb_slide,blink_slide,lrb_slide,fur_slide,smile_slide,clench_slide,laugh_slide,rs_slide,ls_slide)).grid(column=10, row=11, sticky=W)
+brainconfig.bind('<Return>', slidersender)
+#print 'sdffsd'
 note.pack()
-root.mainloop()
-exit()
+brainconfig.mainloop()
+#exit()

@@ -3,10 +3,13 @@ import Tkinter
 import globalslidersend
 import os
 import tkMessageBox
+import sys
+
+#global dicto
 #import BrainBoxGUI2
 #global variables
 #global slidersend
-
+#global 
 class Wizard(object, ttk.Notebook):
     NewAccountVariable = 0
     CurAccountVariable = 0
@@ -86,6 +89,7 @@ class Wizard(object, ttk.Notebook):
                 globalslidersend.usernamepassword[variableslist[3]] = variableslist[4]
                 #globalslidersend.indexuser = userlist.index(variableslist[3])
                 globalslidersend.slidersend = [0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0 ]
+                globalslidersend.slidersend.append(variableslist[3])
                 userdatafile.close()
   
                 self.current += 1
@@ -100,10 +104,18 @@ class Wizard(object, ttk.Notebook):
         for i in self.CurAccountVariable:
             inputlist.append(i.get())
         if inputlist[0] in globalslidersend.usernamepassword.keys() and globalslidersend.usernamepassword[inputlist[0]] == inputlist[1]:
-            print 'right user'
-            self.master.destroy()
-            os.system("python Brainconfig.py 1")  
-    
+            #print 'right user'
+            #print globalslidersend.userdatalist ,globalslidersend.usernamepassword
+            for i in range(len(globalslidersend.userdatalist)):
+                if len(globalslidersend.userdatalist[i]) != 0:
+                    #print globalslidersend.userdatalist[i][0] , len(globalslidersend.userdatalist[i])
+                    if globalslidersend.userdatalist[i][0] == inputlist[0]:
+                        for x in range(1,len(globalslidersend.userdatalist[i])):
+                              globalslidersend.slidersend.append(float(globalslidersend.userdatalist[i][x]))
+                        globalslidersend.slidersend.append(inputlist[0])
+            #print "Wizard" , globalslidersend.slidersend
+            self.master.destroy()                 
+            execfile("Brainconfig.py")
         else :
             tkMessageBox.showinfo("Invalid Input", "Please, Enter your useername and password again")
            
@@ -117,7 +129,7 @@ class Wizard(object, ttk.Notebook):
 
     def close(self):
         self.master.destroy()
-        #execfile("Brainconfig.py")
+        execfile("Brainconfig.py")
         #os.system('python Brainconfig.py')
         #BrainBoxGUI2.BrainBoxExpressiv()
 
