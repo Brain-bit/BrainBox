@@ -7,7 +7,15 @@ import BrainBoxWizard
 import Server
 import NXTrobot
 #import MobileApp
-#import
+import sys
+import MySQLdb as mdb
+
+con = mdb.connect('brain-bit.com', 'ssmapcom_bb', 'q2564', 'ssmapcom_bb');
+def updateval(username,sliderlist):
+    global con
+    cur = con.cursor()
+    query= "UPDATE expressive SET raise=%f,lb=%f,rb=%f,blink=%f,lrb=%f,fur=%f,smile=%f,clench=%f,laugh=%f,rs=%f,ls=%f WHERE userid=%s"
+    cur.execute(query, (sliderlist[0],sliderlist[1],sliderlist[2],sliderlist[3],sliderlist[4],sliderlist[5],sliderlist[6],sliderlist[7],sliderlist[8],sliderlist[9],sliderlist[10],username))
 
 # A Function for creating an input text field and its label
 def fieldandlabel(tab,ltext,val,col1,row1,col2,rw2,setter):
@@ -82,6 +90,7 @@ def slidersender():
     globalslidersend.slidersend.append(float(laugh_slide.get()))
     globalslidersend.slidersend.append(float(rs_slide.get()))
     globalslidersend.slidersend.append(float(ls_slide.get()))
+    sliderlist= globalslidersend.slidersend    
     userdatafile = open("UserData.txt",'r')
     userdata = userdatafile.readlines()
     userdatafile.close()
@@ -162,7 +171,8 @@ t = Text(tab2,width=40, height=10)
 t.grid(column=2,row=14, sticky=(W, E))
 for child in tab2.winfo_children():
     child.grid_configure(padx=5, pady=5)
-ttk.Button(tab2, text="Apply", command=slidersender).grid(column=10, row=12, sticky=W)
+sliderlist = slidersender()
+ttk.Button(tab2, text="Update BrainPrint", command=updateval(username,sliderlist)).grid(column=10, row=11, sticky=W)
 brainconfig.bind('<Return>', slidersender)
 
 note.pack()

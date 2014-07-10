@@ -61,7 +61,7 @@ class Wizard(object, ttk.Notebook):
                 prevbtn.pack(side='right', anchor='e', padx=6)
 
         
-    # A method for....
+    # A method calling the next page in the wizard
     def next_page(self):
         
         if self.current == 1:
@@ -91,7 +91,7 @@ class Wizard(object, ttk.Notebook):
         else:
             self.current += 1
 
-    # A method for....
+    # A method for calling the previous page in the wizard
     def prev_page(self):
         self.current -= 1
 
@@ -113,26 +113,26 @@ class Wizard(object, ttk.Notebook):
             tkMessageBox.showinfo("Invalid Input", "Please, Enter your useername and password again")
            
         
-    # A method for....
+    # A method for numbering the sign_up
     def sign_up(self):
         self.current = 3
         
-    # A method for....
+    # A method for reversing the sign up
     def sign_upprev(self):
         self.current = 0
 
-    # A method for....
+    # A method for closing and opening the configuration window
     def close(self):
         self.master.destroy()
         execfile("Brainconfig.py")
 
-    # A method for....
+    # A method for adding empty wizard steps
     def add_empty_page(self):
         child = ttk.Frame(self)
         self._children[len(self._children)] = child
         self.add(child)
 
-    # A method for....
+    # A method for adding page bodies
     def add_page_body(self, body):
         body.pack(side='top', fill='both', padx=6, pady=12)
 
@@ -145,7 +145,7 @@ class Wizard(object, ttk.Notebook):
         bImg.pack(pady=20)
         desc=ttk.Label(body, text='Welcome to the BrainBox Wizard. Please follow the wizard in order to register\nyour device and callibrate the BCI headset with your appplications.\nPlease connect the headset into the USB port.').pack(pady = 20)
 
-    # A method for....
+    # A method for calling the registration page
     def secondpage(self, body):#Registration page 
         variables = []
         desc=ttk.Label(body, text='Please fill in the registration form below to set up your account with the\nBrainPrint service, and to setup BrainBox.\nPlease make sure you have a proper Internet Connection!').pack(pady = 20)
@@ -183,7 +183,7 @@ class Wizard(object, ttk.Notebook):
         variables.append(deviceentry)
         return variables
     
-    # A method for....    
+    # A method for registration page finish
     def thirdpage(self, body):#Finish registeriation page
         body.pack(side='top', fill='both', padx=6, pady=12)
         img =Tkinter.PhotoImage(file="brainboxwizcor.gif")
@@ -192,7 +192,7 @@ class Wizard(object, ttk.Notebook):
         bImg.pack(pady=20)
         desc=ttk.Label(body, text='Your are now registered, you may know begin\nusing BrainBox! Have a nice day!').pack(pady = 20)
 
-    # A method for....
+    # A method for sign in registration page
     def signin(self, body):#sign in 
         variables = []
         body.pack(side='top', fill='both', padx=6, pady=12)
@@ -212,14 +212,14 @@ class Wizard(object, ttk.Notebook):
         variables.append(passentry)
         return variables
 
-    # A method for....
+    # A method for the page contrainer
     def page_container(self, page_num):
         if page_num in self._children:
             return self._children[page_num]
         else:
             raise KeyError("Invalid page: %s" % page_num)
 
-    # A method for....
+    # A method for getting current page
     def _get_current(self):
         return self._current
     # A method for....  
@@ -232,7 +232,7 @@ class Wizard(object, ttk.Notebook):
 
     current = property(_get_current, _set_current)
 
-# A Function for...
+# A Function initiating the wizard
 def demo():
     globalslidersend.init()
     root = Tkinter.Tk()
