@@ -1,15 +1,17 @@
+# Importing important libraries
 import ttk
 import Tkinter
 import globalslidersend
 import os
 import tkMessageBox
 import sys
+import ExpressivSuite
+from ttk import *
+#import ttk
+import threading
+import time
 
-#global dicto
-#import BrainBoxGUI2
-#global variables
-#global slidersend
-#global 
+# A Class that creates the Wizard GUI
 class Wizard(object, ttk.Notebook):
     NewAccountVariable = 0
     CurAccountVariable = 0
@@ -19,129 +21,123 @@ class Wizard(object, ttk.Notebook):
         kw['style'] = 'Wizard.TNotebook'
         ttk.Style(master).layout('Wizard.TNotebook.Tab', '')
         ttk.Notebook.__init__(self, master, **kw)
-
         self._children = {}
-
         for page in range(npages):
             self.add_empty_page()
-
         self.current = 0
         self._wizard_buttons()
-
+    # A method for placing the wizard buttons in the pages
     def _wizard_buttons(self):
-#        global variables
-        """Place wizard buttons in the pages."""
-        #print self._children.iteritems()
+        
         for indx, child in self._children.iteritems():
             btnframe = ttk.Frame(child)
             btnframe.pack(side='bottom', fill='x', padx=6, pady=12)
-#            nextbtn = ttk.Button(btnframe, text="Next", command=self.next_page(self))            
-            
-            if indx == 0:#welcome page
+
+            # Welcome page
+            if indx == 0:
                 nextbtn = ttk.Button(btnframe, text="Sign up", command=self.next_page)
                 nextbtn.pack(side='right', anchor='e', padx=6)
                 prevbtn = ttk.Button(btnframe, text="Sign in",command=self.sign_up)
                 prevbtn.pack(side='right', anchor='e', padx=6)
-
-            elif indx == 3:#sign in page
+                
+            # Sign in page
+            elif indx == 3:
                 nextbtn = ttk.Button(btnframe, text="Sign in", command=self.check_username)
                 nextbtn.pack(side='right', anchor='e', padx=6)
                 prevbtn = ttk.Button(btnframe, text="Previous",command=self.sign_upprev)
                 prevbtn.pack(side='right', anchor='e', padx=6)
                 
             else:
-                if indx ==1 :#registeriation page
+                # Registeriation page
+                if indx ==1 :
                     nextbtn = ttk.Button(btnframe, text="Next", command=self.next_page)
                     nextbtn.pack(side='right', anchor='e', padx=6)
-                elif indx == 2:#Finish registeriation page
+                # Finish registeriation page
+                elif indx == 2:
                     nextbtn = ttk.Button(btnframe, text="Finish", command=self.close)
                     nextbtn.pack(side='right', anchor='e', padx=6)
             
                 prevbtn = ttk.Button(btnframe, text="Previous",command=self.prev_page)
                 prevbtn.pack(side='right', anchor='e', padx=6)
 
-    #def openother(self):
         
-
-    def next_page(self):#,variable):
-        #print self.current
+    # A method for....
+    def next_page(self):
+        
         if self.current == 1:
             variableslist = []
-            #Name,email,location,user,password,device
-            #user,password,Name,email,location,device
-            #print "Page 2" , self.NewAccountVariable
             for variable in self.NewAccountVariable:
                 variableslist.append(variable.get())
-            print globalslidersend.usernamepassword.keys()
+
             if variableslist[3] in globalslidersend.usernamepassword.keys():
                 tkMessageBox.showinfo("Invalid User", "Please, Enter New User.")
+
             elif '' in variableslist:
                 tkMessageBox.showinfo("Invalid Input", "Please, Fill all textboxes.")
+
             else:
+                
                 userdatafile = open("UserLogin.txt",'a')
                 userdatafile.write('\n'+variableslist[3]+','+variableslist[4]+','+variableslist[0]+','+variableslist[1]+','+variableslist[2]+','+variableslist[5])
-                #userdatafile.writelines(globalslidersend.userdata)
                 userdatafile.close()
-                
                 userdatafile = open("UserData.txt",'a')
                 userdatafile.write('\n'+"%s,0,0,0,0,0,0,0,0,0,0,0"%variableslist[3])
-                #globalslidersend.userlist.append(variableslist[3])
                 globalslidersend.usernamepassword[variableslist[3]] = variableslist[4]
-                #globalslidersend.indexuser = userlist.index(variableslist[3])
                 globalslidersend.slidersend = [0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0 ]
                 globalslidersend.slidersend.append(variableslist[3])
                 userdatafile.close()
-  
                 self.current += 1
-        else:self.current += 1
+                
+        else:
+            self.current += 1
 
+    # A method for....
     def prev_page(self):
         self.current -= 1
 
+    # A method for checking the username inserted
     def check_username(self):
-        #print "Page 1" , self.CurAccountVariable
         inputlist = []
         for i in self.CurAccountVariable:
             inputlist.append(i.get())
         if inputlist[0] in globalslidersend.usernamepassword.keys() and globalslidersend.usernamepassword[inputlist[0]] == inputlist[1]:
-            #print 'right user'
-            #print globalslidersend.userdatalist ,globalslidersend.usernamepassword
             for i in range(len(globalslidersend.userdatalist)):
                 if len(globalslidersend.userdatalist[i]) != 0:
-                    #print globalslidersend.userdatalist[i][0] , len(globalslidersend.userdatalist[i])
                     if globalslidersend.userdatalist[i][0] == inputlist[0]:
                         for x in range(1,len(globalslidersend.userdatalist[i])):
                               globalslidersend.slidersend.append(float(globalslidersend.userdatalist[i][x]))
                         globalslidersend.slidersend.append(inputlist[0])
-            #print "Wizard" , globalslidersend.slidersend
             self.master.destroy()                 
             execfile("Brainconfig.py")
         else :
             tkMessageBox.showinfo("Invalid Input", "Please, Enter your useername and password again")
            
         
-
+    # A method for....
     def sign_up(self):
         self.current = 3
-
+        
+    # A method for....
     def sign_upprev(self):
         self.current = 0
 
+    # A method for....
     def close(self):
         self.master.destroy()
         execfile("Brainconfig.py")
-        #os.system('python Brainconfig.py')
-        #BrainBoxGUI2.BrainBoxExpressiv()
 
+    # A method for....
     def add_empty_page(self):
         child = ttk.Frame(self)
         self._children[len(self._children)] = child
         self.add(child)
 
+    # A method for....
     def add_page_body(self, body):
         body.pack(side='top', fill='both', padx=6, pady=12)
-        
-    def firstpage(self, body):#welcome page
+
+    # A metho for the Welcome page   
+    def firstpage(self, body):
         body.pack(side='top', fill='both', padx=6, pady=12)
         img =Tkinter.PhotoImage(file="bbimtrans.gif")
         bImg = Tkinter.Label(body, image=img)
@@ -149,6 +145,7 @@ class Wizard(object, ttk.Notebook):
         bImg.pack(pady=20)
         desc=ttk.Label(body, text='Welcome to the BrainBox Wizard. Please follow the wizard in order to register\nyour device and callibrate the BCI headset with your appplications.\nPlease connect the headset into the USB port.').pack(pady = 20)
 
+    # A method for....
     def secondpage(self, body):#Registration page 
         variables = []
         desc=ttk.Label(body, text='Please fill in the registration form below to set up your account with the\nBrainPrint service, and to setup BrainBox.\nPlease make sure you have a proper Internet Connection!').pack(pady = 20)
@@ -158,7 +155,6 @@ class Wizard(object, ttk.Notebook):
         name=ttk.Label(body, text='Name').pack(pady=0)
         nameentry= ttk.Entry(body)
         nameentry.pack()
-        #nameentry.insert(0,'Enter your name :')
         variables.append(nameentry)
         
         email=ttk.Label(body, text='Email').pack(pady=10)
@@ -186,7 +182,8 @@ class Wizard(object, ttk.Notebook):
         deviceentry.pack()
         variables.append(deviceentry)
         return variables
-        
+    
+    # A method for....    
     def thirdpage(self, body):#Finish registeriation page
         body.pack(side='top', fill='both', padx=6, pady=12)
         img =Tkinter.PhotoImage(file="brainboxwizcor.gif")
@@ -195,6 +192,7 @@ class Wizard(object, ttk.Notebook):
         bImg.pack(pady=20)
         desc=ttk.Label(body, text='Your are now registered, you may know begin\nusing BrainBox! Have a nice day!').pack(pady = 20)
 
+    # A method for....
     def signin(self, body):#sign in 
         variables = []
         body.pack(side='top', fill='both', padx=6, pady=12)
@@ -214,15 +212,17 @@ class Wizard(object, ttk.Notebook):
         variables.append(passentry)
         return variables
 
+    # A method for....
     def page_container(self, page_num):
         if page_num in self._children:
             return self._children[page_num]
         else:
             raise KeyError("Invalid page: %s" % page_num)
 
+    # A method for....
     def _get_current(self):
         return self._current
-   
+    # A method for....  
     def _set_current(self, curr):
         if curr not in self._children:
             raise KeyError("Invalid page: %s" % curr)
@@ -232,11 +232,9 @@ class Wizard(object, ttk.Notebook):
 
     current = property(_get_current, _set_current)
 
-
+# A Function for...
 def demo():
     globalslidersend.init()
-    #variables = 0
-    
     root = Tkinter.Tk()
     wizard = Wizard(npages=4)
     wizard.master.minsize(400, 350)

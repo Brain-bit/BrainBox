@@ -68,6 +68,7 @@ class Hid:
         self.sock_interrupt.listen(1)
         logging.info("Waiting for a connection...")
 
+        
         # Accept connections from the host, first the control socket and then the interrupt
         self.conn_control, conn_info = self.sock_control.accept()
         self.conn_interrupt, conn_info = self.sock_interrupt.accept()

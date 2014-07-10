@@ -1,12 +1,15 @@
 from Tkinter import *
 from ttk import *
 import ttk
-#import globalslidersend 
 import threading
 import time
 import BrainBoxWizard
+import Server
+import NXTrobot
+#import MobileApp
+#import
 
-def fieldandlabel(tab,ltext,val,col1,row1,col2,row2,setter):
+def fieldandlabel(tab,ltext,val,col1,row1,col2,rw2,setter):
     label=ttk.Label(tab, text=ltext).grid(column=col1, row=row1, sticky=W,padx=5,pady=5)
     field = ttk.Entry(tab, width=7,textvariable=val)
     field.grid(column=col2,row=row2, sticky=(W, E),padx=5,pady=5)
@@ -54,8 +57,6 @@ def expression(setter,name,col,row,col1,row1,col2,row2,tab,N, W, E, S):
 
 
 def slidersender():
-    print "Toooo"
-    print globalslidersend.slidersend
     global username
     global raise_slide
     global lb_slide
@@ -77,42 +78,39 @@ def slidersender():
     globalslidersend.slidersend.append(float(laugh_slide.get()))
     globalslidersend.slidersend.append(float(rs_slide.get()))
     globalslidersend.slidersend.append(float(ls_slide.get()))
-    print globalslidersend.slidersend
     userdatafile = open("UserData.txt",'r')
     userdata = userdatafile.readlines()
     userdatafile.close()
     userdatafile = open("UserData.txt",'w')
     userlist,userdatalist = [],[]
     for x in range(len(userdata)):
-        #print userdata[x]
         if userdata[x] != '\n' or userdata[x] != '':
                 userdatalist.append([])
                 userdalist = userdata[x].strip().split(',')
                 userlist.append(userdalist[0])
     indexuser = userlist.index(username)
     userdata[indexuser]  = "%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s"%(username,float(raise_slide.get()),float(lb_slide.get()),float(rb_slide.get()),float(blink_slide.get()),float(lrb_slide.get()),float(fur_slide.get()),float(smile_slide.get()),float(clench_slide.get()),float(laugh_slide.get()),float(rs_slide.get()),float(ls_slide.get()))    
-    print userdata
     for x in userdata:
         userdatafile.write(x+'\n')
     userdatafile.close()
-      #writelines
-    #return globalslidersend.slidersend
 
 
 
-#print "Toooooooooooooooooooo"
-#time.sleep(5)
-#import wizard
-#print wizard.slidersend
-#print globals()
-#print locals()
+threadserver = threading.Thread(target=Server.main)
+threadserver.start()
+time.sleep(1)
+print 'server is begining to work'
+threadexp = threading.Thread(target=ExpressivSuite.main)
+threadexp.start()
+time.sleep(3)
 
-#pri
-#print globalslidersend.slidersend
+threadrobot = threading.Thread(target=NXTrobot.main)
+threadrobot.start()
+
 username = globalslidersend.slidersend[-1]
+
 brainconfig = Tk()
 brainconfig.title("BrainBox | Configuration")
-#globalslidersend.init()
 note = Notebook(brainconfig,  padding="3 3 12 12")
 note.grid(column=0, row=0, sticky=(N, W, E, S))
 tab1 = Frame(note)
@@ -142,8 +140,6 @@ clench_slide = expression(0,"Clench:",1,10,2,10,3,10,tab2,N, W, E, S)
 laugh_slide = expression(0,"Laugh:",1,11,2,11,3,11,tab2,N, W, E, S)
 rs_slide = expression(0,"Right Smirk:",1,12,2,12,3,12,tab2,N, W, E, S)
 ls_slide = expression(0,"Left Smirk:",1,13,2,13,3,13,tab2,N, W, E, S)
-#print globalslidersend.slidersend
-
 raise_slide.set(globalslidersend.slidersend[0])
 lb_slide.set(globalslidersend.slidersend[1])
 rb_slide.set(globalslidersend.slidersend[2])
@@ -158,14 +154,11 @@ ls_slide.set(globalslidersend.slidersend[10])
 
 t = Text(tab2,width=40, height=10)
 t.grid(column=2,row=14, sticky=(W, E))
-#print "fdws"
 for child in tab2.winfo_children():
     child.grid_configure(padx=5, pady=5)
-#print "Totototototototoottoo"
 ttk.Button(tab2, text="Apply", command=slidersender).grid(column=10, row=12, sticky=W)
-#ttk.Button(tab2, text="Update BrainPrint", command=slidersender(username,raise_slide,lb_slide,rb_slide,blink_slide,lrb_slide,fur_slide,smile_slide,clench_slide,laugh_slide,rs_slide,ls_slide)).grid(column=10, row=11, sticky=W)
 brainconfig.bind('<Return>', slidersender)
-#print 'sdffsd'
+
 note.pack()
 brainconfig.mainloop()
-#exit()
+

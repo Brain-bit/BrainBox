@@ -112,7 +112,8 @@ def main():
     global end
     #intializing the server connection 
     host = ''
-    port = 10146
+    port = 10160
+    
     server = ThreadServer((host,port),threadHandler)
     server_thread = threading.Thread(target=server.serve_forever)
     server_thread.start()
@@ -121,7 +122,7 @@ def main():
             print "Working",clientslist
             time.sleep(10)
     # Exception handling        
-    except KeyboardInterrupt:
+    except:
         print 'Server is exiting'
         server.shutdown()
         time.sleep(5)
@@ -131,9 +132,10 @@ def main():
         if  len(clientslist) != 0:
             for address in clientslist:
                 socket.sendto('Exit',address)
+            
         print 'Server is exiting'
         server.shutdown()
         time.sleep(6)
 
 # Starting up the file and server
-main()
+#main()
